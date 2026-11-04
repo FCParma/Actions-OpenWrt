@@ -19,26 +19,9 @@
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 
-# Создаем патч разгона процессора до 1100 МГц
-mkdir -p target/linux/ramips/patches-6.6/
-cat << 'EOF' > target/linux/ramips/patches-6.6/999-mt7621-overclock-1100mhz.patch
---- a/drivers/clk/ralink/clk-mt7621.c
-+++ b/drivers/clk/ralink/clk-mt7621.c
-@@ -145,6 +145,14 @@ static void __init mt7621_clk_init(struc
- 	u32 val;
- 	int i;
- 
-+	/* Принудительный разгон CPU до 1100 MHz */
-+	void __iomem *memc = ioremap(0x1e007000, 0x1000);
-+	if (memc) {
-+		writel((readl(memc + 0x648) & ~(0x7f << 4)) | (0x2b << 4), memc + 0x648);
-+		iounmap(memc);
-+	}
-+
- 	sysc = ioremap(SYSC_BASE, SZ_4K);
- 	if (!sysc)
- 		return;
-EOF
+# Прямая модификация кода ядра для принудительного разгона ЦП до 1100 МГц
+sed -i '/static void __init mt7621_clk_init/a \
+\v\vo\vi\vd\ \*\m\me\mm\mc\ \=\ \i\oo\re\mm\aa\p\(\0\xi\1\ee\0\0\7\0\0\0\,\ \0\xi\1\0\0\0\)\;\ \i\ff\ \(\mm\ee\mm\cc\)\ \{\ \w\ri\tt\ee\ll\(\(\re\aa\dd\ll\(\mm\ee\mm\cc\ \+\ \0\xi\6\4\8\)\ \&\ \~\(\0\xi\7\ff\ \<\<\ \4\)\)\ \|\ \(\0\xi\2\bb\ \<\<\ \4\)\,\ \mm\ee\mm\cc\ \+\ \0\xi\6\4\8\)\;\ \i\oo\un\mm\aa\p\(\mm\ee\mm\cc\)\;\ \}' target/linux/ramips/files-6.6/drivers/clk/ralink/clk-mt7621.c || sed -i '/static void __init mt7621_clk_init/a \    void __iomem *memc = ioremap(0x1e007000, 0x1000); if (memc) { writel((readl(memc + 0x648) & ~(0x7f << 4)) | (0x2b << 4), memc + 0x648); iounmap(memc); }' target/linux/ramips/files-6.1/drivers/clk/ralink/clk-mt7621.c
 
 # Исправляем DTS роутера для корректного расчета таймеров на 1100 МГц
 sed -i 's/clock-frequency = <880000000>;/clock-frequency = <1100000000>;/g' target/linux/ramips/dts/mt7621_xiaomi_mi-router-3g.dts
