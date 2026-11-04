@@ -19,11 +19,11 @@
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 
-# Создаем целевую папку для патчей ядра 6.12
-mkdir -p target/linux/ramips/patches-6.12/
+# Создаем целевую папку для патчей самого нового ядра 6.18
+mkdir -p target/linux/ramips/patches-6.18/
 
-# Записываем гарантированный патч для драйвера часов clk-mt7621.c
-cat << 'EOF' > target/linux/ramips/patches-6.12/999-mt7621-overclock-1100mhz.patch
+# Записываем точный патч разгона для драйвера clk-mt7621.c
+cat << 'EOF' > target/linux/ramips/patches-6.18/999-mt7621-overclock-1100mhz.patch
 --- a/drivers/clk/ralink/clk-mt7621.c
 +++ b/drivers/clk/ralink/clk-mt7621.c
 @@ -536,6 +536,12 @@ static void __init mt7621_clk_init(struc
