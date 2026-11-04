@@ -22,14 +22,20 @@
 # Создаем целевую папку для патчей ядра 6.12
 mkdir -p target/linux/ramips/patches-6.12/
 
-# Записываем точечный патч для файла arch/mips/ralink/mt7621.c
-cat << 'EOF' > target/linux/ramips/patches-6.12/999-mt7621-early-overclock-1100mhz.patch
---- a/arch/mips/ralink/mt7621.c
-+++ b/arch/mips/ralink/mt7621.c
-@@ -217,4 +217,6 @@ void __init prom_soc_init(struct ralink_soc_info *soc_info)
- 	if (!register_vsmp_smp_ops())
- 		return;
+# Записываем гарантированный патч для драйвера часов clk-mt7621.c
+cat << 'EOF' > target/linux/ramips/patches-6.12/999-mt7621-overclock-1100mhz.patch
+--- a/drivers/clk/ralink/clk-mt7621.c
++++ b/drivers/clk/ralink/clk-mt7621.c
+@@ -536,6 +536,12 @@ static void __init mt7621_clk_init(struc
+ 	if (IS_ERR(priv->memc)) {
+ 		pr_err("Could not get memc syscon regmap\n");
+ 		goto free_clk_priv;
++	}
 +
-+	*(volatile uint32_t *)(0xbe007648) = (*(volatile uint32_t *)(0xbe007648) & ~(0x7f << 4)) | (0x2b << 4);
- }
- EOF
++	/* Принудительный разгон до 1100 МГц на этапе инициализации часов */
++	if (!regmap_update_bits(priv->memc, MEMC_REG_CPU_PLL, (0x7f << 4), (0x2b << 4))) {
++		pr_info("MT7621 Overclock: Register 0x648 updated to 1100 MHz\n");
+ 	}
+ 
+ 	count = ARRAY_SIZE(mt7621_clks_base) +
+EOF
