@@ -19,23 +19,6 @@
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 
-# Создаем папки для патчей стабильного ядра 6.12
-mkdir -p target/linux/ramips/patches-6.12/
-
-# Шаблон патча разгона до 1100 МГц
-cat << 'EOF' > target/linux/ramips/patches-6.12/999-mt7621-overclock-1100mhz.patch
---- a/drivers/clk/ralink/clk-mt7621.c
-+++ b/drivers/clk/ralink/clk-mt7621.c
-@@ -536,6 +536,12 @@ static void __init mt7621_clk_init(struc
- 	if (IS_ERR(priv->memc)) {
- 		pr_err("Could not get memc syscon regmap\n");
- 		goto free_clk_priv;
-+	}
-+
-+	/* Принудительный разгон до 1100 МГц на этапе инициализации часов */
-+	if (!regmap_update_bits(priv->memc, MEMC_REG_CPU_PLL, (0x7f << 4), (0x2b << 4))) {
-+		pr_info("MT7621 Overclock: Register 0x648 updated to 1100 MHz\n");
- 	}
- 
- 	count = ARRAY_SIZE(mt7621_clks_base) +
-EOF
+# Модифицируем исходный файл драйвера часов до сборки ядра
+# Находим строку "if (IS_ERR(priv->memc)) {" и сразу после закрывающей скобки блока if (строка 539) вставляем код разгона регистров
+sed -i '/if (IS_ERR(priv->memc)) {/,/}/!b; /}/a \\n\t/* Forced Overclock to 1100 MHz */\n\tregmap_update_bits(priv->memc, MEMC_REG_CPU_PLL, (0x7f << 4), (0x2b << 4));' target/linux/ramips/patches-6.12/102-mt7621-clk-driver.patch || sed -i '/if (IS_ERR(priv->memc)) {/,/}/!b; /}/a \\n\t/* Forced Overclock to 1100 MHz */\n\tregmap_update_bits(priv->memc, MEMC_REG_CPU_PLL, (0x7f << 4), (0x2b << 4));' target/linux/ramips/patches-*/102-mt7621-clk-driver.patch
