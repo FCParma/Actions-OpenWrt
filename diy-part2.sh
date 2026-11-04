@@ -20,5 +20,5 @@
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
 
 # Принудительная инициализация регистра CPU PLL на частоту 1100 МГц (early setup)
-mkdir -p target/linux/ramips/patches-6.6/
-echo -e '--- a/arch/mips/ralink/mt7621.c\n+++ b/arch/mips/ralink/mt7621.c\n@@ -200,4 +200,6 @@ void __init prom_soc_init(struct ralink_soc_info *soc_info)\n \t\t\tsoc_info->mem_size = MT7621_MAX_MEM;\n \t}\n+\n+\t*(volatile uint32_t *)(0xbe007648) = (*(volatile uint32_t *)(0xbe007648) & ~(0x7f << 4)) | (0x2b << 4);\n }' > target/linux/ramips/patches-6.6/999-mt7621-early-overclock-1100mhz.patch
+mkdir -p target/linux/ramips/patches-6.12/
+echo -e '--- a/arch/mips/ralink/mt7621.c\n+++ b/arch/mips/ralink/mt7621.c\n@@ -200,4 +200,6 @@ void __init prom_soc_init(struct ralink_soc_info *soc_info)\n \t\t\tsoc_info->mem_size = MT7621_MAX_MEM;\n \t}\n+\n+\t*(volatile uint32_t *)(0xbe007648) = (*(volatile uint32_t *)(0xbe007648) & ~(0x7f << 4)) | (0x2b << 4);\n }' > target/linux/ramips/patches-6.12/999-mt7621-early-overclock-1100mhz.patch
